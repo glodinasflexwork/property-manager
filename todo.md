@@ -110,3 +110,12 @@
 - [x] Show expense summaries by property and category
 - [x] Integrate with budget tracking to update actual amounts
 - [x] Add delete and edit functionality for invoices
+
+## Current Focus: Insights & Analytics Dashboard
+- [x] Build Insights page with portfolio overview cards
+- [x] Show best and worst performing properties by ROI
+- [x] Create expense breakdown chart by category
+- [x] Add property comparison table with key metrics
+- [x] Implement total portfolio value and profit calculations
+- [x] Show monthly expense trends chart
+- [x] Add property count by status visualization
