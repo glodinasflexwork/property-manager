@@ -101,3 +101,12 @@
 - [x] Create Budget tab with budget items and actual vs budgeted comparison
 - [x] Build Cash Flow tab with monthly income/expense input and calculations
 - [x] Implement Performance tab with ROI metrics and trend visualizations
+
+## Current Focus: Invoice & Expense Tracking Page
+- [x] Build Invoices page with list view and filters
+- [x] Create add invoice dialog with file upload
+- [x] Implement category selection and property linking
+- [x] Add invoice detail view with file preview
+- [x] Show expense summaries by property and category
+- [x] Integrate with budget tracking to update actual amounts
+- [x] Add delete and edit functionality for invoices
