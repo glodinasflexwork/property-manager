@@ -175,6 +175,45 @@ export async function getUserRole(userId: number, organizationId: number) {
   return result[0]?.role;
 }
 
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  return result[0];
+}
+
+export async function getTeamMemberByUserAndOrg(userId: number, organizationId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(teamMembers)
+    .where(and(eq(teamMembers.userId, userId), eq(teamMembers.organizationId, organizationId)))
+    .limit(1);
+  return result[0];
+}
+
+export async function getTeamMemberById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.id, id))
+    .limit(1);
+  return result[0];
+}
+
+export async function removeTeamMember(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(teamMembers).where(eq(teamMembers.id, id));
+}
+
 // ============================================
 // PROPERTIES
 // ============================================

@@ -610,6 +610,66 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         return db.getUserRole(ctx.user.id, input.organizationId);
       }),
+
+    // Invite team member
+    invite: protectedProcedure
+      .input(z.object({
+        organizationId: z.number(),
+        email: z.string().email(),
+        role: z.enum(["owner", "administrator", "editor", "viewer"]),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const userRole = await checkOrganizationAccess(ctx.user.id, input.organizationId);
+        if (!isOwnerOrAdmin(userRole)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You don't have permission to invite team members" });
+        }
+
+        // Check if user exists by email
+        const existingUser = await db.getUserByEmail(input.email);
+        
+        if (!existingUser) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "User not found. They need to sign up first." });
+        }
+
+        // Check if user is already a team member
+        const existingMember = await db.getTeamMemberByUserAndOrg(existingUser.id, input.organizationId);
+        if (existingMember) {
+          throw new TRPCError({ code: "CONFLICT", message: "User is already a team member" });
+        }
+
+        const id = await db.addTeamMember({
+          organizationId: input.organizationId,
+          userId: existingUser.id,
+          role: input.role,
+          invitedBy: ctx.user.id,
+          acceptedAt: new Date(), // Auto-accept for now
+        });
+
+        return { id, success: true };
+      }),
+
+    // Remove team member
+    remove: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const member = await db.getTeamMemberById(input.id);
+        if (!member) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Team member not found" });
+        }
+
+        const userRole = await checkOrganizationAccess(ctx.user.id, member.organizationId);
+        if (!isOwnerOrAdmin(userRole)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You don't have permission to remove team members" });
+        }
+
+        // Cannot remove owner
+        if (member.role === "owner") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Cannot remove organization owner" });
+        }
+
+        await db.removeTeamMember(input.id);
+        return { success: true };
+      }),
   }),
 
   // ============================================

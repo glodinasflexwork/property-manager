@@ -119,3 +119,12 @@
 - [x] Implement total portfolio value and profit calculations
 - [x] Show monthly expense trends chart
 - [x] Add property count by status visualization
+
+## Current Focus: Team Management & Collaboration
+- [x] Build Team page with member list and role badges
+- [x] Create invite team member dialog with email input
+- [x] Implement role selection (Owner/Admin/Editor/Viewer)
+- [x] Add permission checks for different roles
+- [x] Show pending invitations with accept/decline functionality
+- [x] Add remove team member functionality
+- [x] Display role-based access indicators in UI
