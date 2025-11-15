@@ -12,10 +12,14 @@ import Insights from "./pages/Insights";
 import Team from "./pages/Team";
 import Billing from "./pages/Billing";
 import AdminDashboard from "./pages/AdminDashboard";
+import Login from "./pages/Login";
 
 function Router() {
   return (
     <Switch>
+      {/* Public routes */}
+      <Route path="/login" component={Login} />
+      
       {/* Dashboard routes */}
       <Route path="/" component={Properties} />
       <Route path="/properties" component={Properties} />
@@ -39,9 +43,17 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <DashboardLayout>
-            <Router />
-          </DashboardLayout>
+          <Switch>
+            {/* Public route without dashboard layout */}
+            <Route path="/login" component={Login} />
+            
+            {/* All other routes with dashboard layout */}
+            <Route>
+              <DashboardLayout>
+                <Router />
+              </DashboardLayout>
+            </Route>
+          </Switch>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

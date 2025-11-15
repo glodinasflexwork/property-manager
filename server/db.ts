@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { InsertUser, users, magicLinkTokens, InsertMagicLinkToken } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -19,8 +19,8 @@ export async function getDb() {
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
+  if (!user.email && !user.openId) {
+    throw new Error("User email or openId is required for upsert");
   }
 
   const db = await getDb();
@@ -30,47 +30,38 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
+    // Check if user exists by email or openId
+    let existingUser;
+    if (user.email) {
+      existingUser = await getUserByEmail(user.email);
+    } else if (user.openId) {
+      existingUser = await getUserByOpenId(user.openId);
     }
 
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
+    if (existingUser) {
+      // Update existing user
+      const updateData: Partial<InsertUser> = {};
+      if (user.name !== undefined) updateData.name = user.name;
+      if (user.email !== undefined) updateData.email = user.email;
+      if (user.loginMethod !== undefined) updateData.loginMethod = user.loginMethod;
+      if (user.lastSignedIn !== undefined) updateData.lastSignedIn = user.lastSignedIn;
+      if (user.role !== undefined) updateData.role = user.role;
+      
+      if (Object.keys(updateData).length > 0) {
+        await db.update(users).set(updateData).where(eq(users.id, existingUser.id));
+      }
+    } else {
+      // Create new user
+      const newUser: InsertUser = {
+        email: user.email!,
+        name: user.name ?? null,
+        openId: user.openId ?? null,
+        loginMethod: user.loginMethod ?? null,
+        role: user.role ?? 'user',
+        lastSignedIn: user.lastSignedIn ?? new Date(),
+      };
+      await db.insert(users).values(newUser);
     }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -432,4 +423,52 @@ export async function getPlatformStats() {
     totalSeats: totalSeats.total,
     totalRevenue: totalRevenue.total,
   };
+}
+
+// ============================================
+// MAGIC LINK TOKENS
+// ============================================
+
+export async function createMagicLinkToken(token: InsertMagicLinkToken) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(magicLinkTokens).values(token);
+  return result[0];
+}
+
+export async function getMagicLinkToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(magicLinkTokens)
+    .where(eq(magicLinkTokens.token, token))
+    .limit(1);
+  return result[0];
+}
+
+export async function markMagicLinkTokenAsUsed(token: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(magicLinkTokens)
+    .set({ usedAt: new Date() })
+    .where(eq(magicLinkTokens.token, token));
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createUser(user: InsertUser) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(users).values(user);
+  return result[0];
 }

@@ -266,34 +266,22 @@ class SDKServer {
       throw ForbiddenError("Invalid session cookie");
     }
 
-    const sessionUserId = session.openId;
+    const sessionUserId = session.openId; // This is actually email for magic link auth
     const signedInAt = new Date();
-    let user = await db.getUserByOpenId(sessionUserId);
-
-    // If user not in DB, sync from OAuth server automatically
+    
+    // Try to get user by email first (magic link auth), then by openId (legacy OAuth)
+    let user = await db.getUserByEmail(sessionUserId);
     if (!user) {
-      try {
-        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
-        await db.upsertUser({
-          openId: userInfo.openId,
-          name: userInfo.name || null,
-          email: userInfo.email ?? null,
-          loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-          lastSignedIn: signedInAt,
-        });
-        user = await db.getUserByOpenId(userInfo.openId);
-      } catch (error) {
-        console.error("[Auth] Failed to sync user from OAuth:", error);
-        throw ForbiddenError("Failed to sync user info");
-      }
+      user = await db.getUserByOpenId(sessionUserId);
     }
 
     if (!user) {
       throw ForbiddenError("User not found");
     }
 
+    // Update last signed in
     await db.upsertUser({
-      openId: user.openId,
+      email: user.email,
       lastSignedIn: signedInAt,
     });
 

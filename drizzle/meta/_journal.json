@@ -1,19 +1,19 @@
 {
   "version": "7",
-  "dialect": "mysql",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1763218717251,
-      "tag": "0000_smooth_mentallo",
+      "version": "7",
+      "when": 1763228789069,
+      "tag": "0000_lethal_ser_duncan",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "5",
-      "when": 1763218793247,
-      "tag": "0001_bent_iron_lad",
+      "version": "7",
+      "when": 1763229142011,
+      "tag": "0001_clean_black_queen",
       "breakpoints": true
     }
   ]
