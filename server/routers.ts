@@ -50,28 +50,43 @@ export const appRouter = router({
   organizations: router({
     // Get or create user's organization
     getOrCreate: protectedProcedure.query(async ({ ctx }) => {
-      // Check if user already has an organization
-      const orgs = await db.getOrganizationsByOwnerId(ctx.user.id);
-      if (orgs.length > 0) {
-        return orgs[0];
+      try {
+        // Check if user already has an organization
+        const orgs = await db.getOrganizationsByOwnerId(ctx.user.id);
+        if (orgs.length > 0) {
+          console.log(`[getOrCreate] User ${ctx.user.id} already has organization ${orgs[0].id}`);
+          return orgs[0];
+        }
+
+        console.log(`[getOrCreate] Creating new organization for user ${ctx.user.id}`);
+        
+        // Use user's email as fallback if name is null
+        const userName = ctx.user.name || ctx.user.email.split('@')[0];
+        
+        // Create new organization for user
+        const orgId = await db.createOrganization({
+          name: `${userName}'s Portfolio`,
+          ownerId: ctx.user.id,
+        });
+        console.log(`[getOrCreate] Created organization ${orgId}`);
+
+        // Add user as owner in team members
+        const teamMemberId = await db.addTeamMember({
+          organizationId: orgId,
+          userId: ctx.user.id,
+          role: "owner",
+          invitedBy: ctx.user.id,
+          acceptedAt: new Date(),
+        });
+        console.log(`[getOrCreate] Added team member ${teamMemberId} for user ${ctx.user.id}`);
+
+        const org = await db.getOrganizationById(orgId);
+        console.log(`[getOrCreate] Successfully created and configured organization ${orgId}`);
+        return org;
+      } catch (error) {
+        console.error('[getOrCreate] Error:', error);
+        throw error;
       }
-
-      // Create new organization for user
-      const orgId = await db.createOrganization({
-        name: `${ctx.user.name}'s Portfolio`,
-        ownerId: ctx.user.id,
-      });
-
-      // Add user as owner in team members
-      await db.addTeamMember({
-        organizationId: orgId,
-        userId: ctx.user.id,
-        role: "owner",
-        invitedBy: ctx.user.id,
-        acceptedAt: new Date(),
-      });
-
-      return db.getOrganizationById(orgId);
     }),
 
     // Get organization by ID
