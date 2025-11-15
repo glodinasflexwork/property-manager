@@ -1,0 +1,10 @@
+DATABASE_URL=postgresql://neondb_owner:npg_Q35JojzwHWvb@ep-nameless-unit-aeurlrjw-pooler.c-2.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require
+VITE_APP_ID=property-manager-app
+VITE_APP_TITLE=Property Manager Pro
+JWT_SECRET=dev-secret-change-in-production-12345
+RESEND_API_KEY=re_PPZUzVTe_HCUKybDrYyb6wLy1gYL7shiM
+EMAIL_FROM=onboarding@resend.dev
+APP_URL=https://your-app-name.vercel.app
+OAUTH_SERVER_URL=https://placeholder.com
+VITE_OAUTH_PORTAL_URL=https://placeholder.com
+NODE_ENV=production

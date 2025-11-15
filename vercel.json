@@ -2,20 +2,5 @@
   "buildCommand": "pnpm build:vercel",
   "outputDirectory": "dist/public",
   "installCommand": "pnpm install",
-  "framework": null,
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/server"
-    }
-  ],
-  "functions": {
-    "api/server.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 30
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "framework": null
 }
