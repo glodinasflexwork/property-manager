@@ -2,6 +2,12 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { InsertUser, users, magicLinkTokens, InsertMagicLinkToken } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import ws from 'ws';
+
+// Configure WebSocket for Neon serverless in Node.js environment
+if (typeof WebSocket === 'undefined') {
+  global.WebSocket = ws as any;
+}
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
