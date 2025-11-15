@@ -673,6 +673,100 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // BILLING & SUBSCRIPTIONS
+  // ============================================
+  billing: router({  
+    // Get subscription status
+    getSubscription: protectedProcedure
+      .input(z.object({ organizationId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        await checkOrganizationAccess(ctx.user.id, input.organizationId);
+        return db.getSubscriptionByOrganization(input.organizationId);
+      }),
+
+    // Create checkout session for new subscription
+    createCheckoutSession: protectedProcedure
+      .input(z.object({
+        organizationId: z.number(),
+        seats: z.number().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const userRole = await checkOrganizationAccess(ctx.user.id, input.organizationId);
+        if (!isOwnerOrAdmin(userRole)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only owners and admins can manage billing" });
+        }
+
+        const Stripe = (await import("stripe")).default;
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+          apiVersion: "2025-10-29.clover",
+        });
+
+        const { calculateSubscriptionCost, STRIPE_PRODUCTS } = await import("./products");
+        const amount = calculateSubscriptionCost(input.seats);
+
+        const session = await stripe.checkout.sessions.create({
+          mode: "subscription",
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: "Property Manager Pro",
+                  description: `Per-seat subscription (${input.seats} seats)`,
+                },
+                unit_amount: STRIPE_PRODUCTS.PER_SEAT_MONTHLY.pricePerSeat,
+                recurring: {
+                  interval: "month",
+                },
+              },
+              quantity: input.seats,
+            },
+          ],
+          success_url: `${ctx.req.headers.origin}/billing?success=true`,
+          cancel_url: `${ctx.req.headers.origin}/billing?canceled=true`,
+          customer_email: ctx.user.email || undefined,
+          client_reference_id: ctx.user.id.toString(),
+          metadata: {
+            organization_id: input.organizationId.toString(),
+            user_id: ctx.user.id.toString(),
+            seats: input.seats.toString(),
+          },
+          allow_promotion_codes: true,
+        });
+
+        return { url: session.url };
+      }),
+
+    // Get billing portal session
+    createPortalSession: protectedProcedure
+      .input(z.object({ organizationId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const userRole = await checkOrganizationAccess(ctx.user.id, input.organizationId);
+        if (!isOwnerOrAdmin(userRole)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only owners and admins can manage billing" });
+        }
+
+        const subscription = await db.getSubscriptionByOrganization(input.organizationId);
+        if (!subscription?.stripeCustomerId) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "No active subscription found" });
+        }
+
+        const Stripe = (await import("stripe")).default;
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+          apiVersion: "2025-10-29.clover",
+        });
+
+        const session = await stripe.billingPortal.sessions.create({
+          customer: subscription.stripeCustomerId,
+          return_url: `${ctx.req.headers.origin}/billing`,
+        });
+
+        return { url: session.url };
+      }),
+  }),
+
+  // ============================================
   // PLATFORM ADMIN (Owner only)
   // ============================================
   admin: router({

@@ -128,3 +128,14 @@
 - [x] Show pending invitations with accept/decline functionality
 - [x] Add remove team member functionality
 - [x] Display role-based access indicators in UI
+
+## Current Focus: Stripe Billing Integration
+- [x] Set up Stripe feature with webdev_add_feature
+- [x] Request Stripe API keys from user
+- [x] Create subscription plans in Stripe
+- [x] Build Billing page with subscription status
+- [x] Implement per-seat pricing calculation
+- [x] Add payment method management
+- [x] Create checkout flow for new subscriptions
+- [x] Add subscription upgrade/downgrade functionality
+- [x] Implement webhook handlers for subscription events

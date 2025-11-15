@@ -422,6 +422,26 @@ export async function getSubscriptionByOrganization(organizationId: number) {
   return result[0];
 }
 
+export async function getSubscriptionByStripeId(stripeSubscriptionId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId))
+    .limit(1);
+  return result[0];
+}
+
+export async function updateSubscription(id: number, updates: Partial<InsertSubscription>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(subscriptions)
+    .set(updates)
+    .where(eq(subscriptions.id, id));
+}
+
 // ============================================
 // ANALYTICS / INSIGHTS
 // ============================================
