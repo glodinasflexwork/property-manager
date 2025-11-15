@@ -438,7 +438,7 @@ export async function getPlatformStats() {
 export async function createMagicLinkToken(token: InsertMagicLinkToken) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(magicLinkTokens).values(token);
+  const result = await db.insert(magicLinkTokens).values(token).returning();
   return result[0];
 }
 
@@ -475,6 +475,6 @@ export async function getUserByEmail(email: string) {
 export async function createUser(user: InsertUser) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(users).values(user);
+  const result = await db.insert(users).values(user).returning();
   return result[0];
 }
