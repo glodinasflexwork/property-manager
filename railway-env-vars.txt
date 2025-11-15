@@ -1,0 +1,29 @@
+# Railway Environment Variables
+# Copy these to Railway Dashboard → Variables
+
+# Database (use your existing Neon database OR Railway's PostgreSQL)
+DATABASE_URL=postgresql://neondb_owner:npg_Q35JojzwHWvb@ep-nameless-unit-aeurlrjw-pooler.c-2.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require
+
+# Application
+VITE_APP_ID=property-manager-app
+VITE_APP_TITLE=Property Manager Pro
+
+# JWT Secret (generate new for production: openssl rand -base64 32)
+JWT_SECRET=dev-secret-change-in-production-12345
+
+# Magic Link Authentication
+RESEND_API_KEY=re_PPZUzVTe_HCUKybDrYyb6wLy1gYL7shiM
+EMAIL_FROM=onboarding@resend.dev
+
+# Application URL (update after first deployment with Railway URL)
+APP_URL=https://your-app.up.railway.app
+
+# OAuth Placeholders (not used but required)
+OAUTH_SERVER_URL=https://placeholder.com
+VITE_OAUTH_PORTAL_URL=https://placeholder.com
+
+# Node Environment
+NODE_ENV=production
+
+# Port (Railway sets this automatically, but we can default to 3000)
+PORT=3000
