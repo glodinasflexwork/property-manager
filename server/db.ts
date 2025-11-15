@@ -113,8 +113,8 @@ import { and, desc, sql } from "drizzle-orm";
 export async function createOrganization(org: InsertOrganization) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(organizations).values(org);
-  return result[0].insertId;
+  const result = await db.insert(organizations).values(org).returning({ id: organizations.id });
+  return result[0].id;
 }
 
 export async function getOrganizationById(id: number) {
@@ -137,8 +137,8 @@ export async function getOrganizationsByOwnerId(ownerId: number) {
 export async function addTeamMember(member: InsertTeamMember) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(teamMembers).values(member);
-  return result[0].insertId;
+  const result = await db.insert(teamMembers).values(member).returning({ id: teamMembers.id });
+  return result[0].id;
 }
 
 export async function getTeamMembersByOrganization(organizationId: number) {
@@ -179,8 +179,8 @@ export async function getUserRole(userId: number, organizationId: number) {
 export async function createProperty(property: InsertProperty) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(properties).values(property);
-  return result[0].insertId;
+  const result = await db.insert(properties).values(property).returning({ id: properties.id });
+  return result[0].id;
 }
 
 export async function updateProperty(id: number, property: Partial<InsertProperty>) {
@@ -215,8 +215,8 @@ export async function getPropertiesByOrganization(organizationId: number) {
 export async function addPropertyPhoto(photo: InsertPropertyPhoto) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(propertyPhotos).values(photo);
-  return result[0].insertId;
+  const result = await db.insert(propertyPhotos).values(photo).returning({ id: propertyPhotos.id });
+  return result[0].id;
 }
 
 export async function getPropertyPhotos(propertyId: number) {
@@ -238,8 +238,8 @@ export async function deletePropertyPhoto(id: number) {
 export async function createInvoice(invoice: InsertInvoice) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(invoices).values(invoice);
-  return result[0].insertId;
+  const result = await db.insert(invoices).values(invoice).returning({ id: invoices.id });
+  return result[0].id;
 }
 
 export async function updateInvoice(id: number, invoice: Partial<InsertInvoice>) {
@@ -286,8 +286,8 @@ export async function getInvoicesByPropertyAndCategory(propertyId: number, categ
 export async function createBudget(budget: InsertBudget) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(budgets).values(budget);
-  return result[0].insertId;
+  const result = await db.insert(budgets).values(budget).returning({ id: budgets.id });
+  return result[0].id;
 }
 
 export async function updateBudget(id: number, budget: Partial<InsertBudget>) {
@@ -336,8 +336,8 @@ export async function upsertCashFlow(flow: InsertCashFlow) {
       .where(eq(cashFlow.id, existing[0].id));
     return existing[0].id;
   } else {
-    const result = await db.insert(cashFlow).values(flow);
-    return result[0].insertId;
+    const result = await db.insert(cashFlow).values(flow).returning({ id: cashFlow.id });
+    return result[0].id;
   }
 }
 
@@ -368,8 +368,8 @@ export async function upsertSubscription(subscription: InsertSubscription) {
       .where(eq(subscriptions.id, existing[0].id));
     return existing[0].id;
   } else {
-    const result = await db.insert(subscriptions).values(subscription);
-    return result[0].insertId;
+    const result = await db.insert(subscriptions).values(subscription).returning({ id: subscriptions.id });
+    return result[0].id;
   }
 }
 
